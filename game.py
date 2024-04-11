@@ -137,9 +137,9 @@ if __name__ == '__main__':
     multiMove('Charles', (Moveset.RIGHT, Moveset.RIGHT, Moveset.DOWN))
 
     print(g.getScores())
-    # print(g.getGameData('Charles',10))
-    # print(g.map.numCoins)
-    # print(g.gameOver())
+    print(g.getGameData('Charles',10))
+    print(g.map.numCoins)
+    print(g.gameOver())
 
     # g.movePlayer('James', Moveset.DOWN)
     # g.movePlayer('James', Moveset.LEFT)

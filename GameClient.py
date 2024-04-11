@@ -11,6 +11,16 @@ from InputTypes import NewPlayer
 from game import Game
 from moveset import Moveset
 
+import time
+import logging
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+import random  # Add this line for random module
+
+
+
 # setting callbacks for different events to see if it works, print the message etc.
 def on_connect(client, userdata, flags, rc, properties=None):
     """
@@ -145,7 +155,7 @@ def player_move(client, topic_list, msg_payload):
 def start_game(client, topic_list, msg_payload):
     lobby_name = topic_list[1]
     if isinstance(msg_payload, bytes) and msg_payload.decode() == "START":
-
+        print("inside START if")
         if lobby_name in client.team_dict.keys():
                 # create new game
                 dict_copy = copy.deepcopy(client.team_dict[lobby_name])
@@ -167,7 +177,6 @@ def start_game(client, topic_list, msg_payload):
         client.move_dict.pop(lobby_name, None)
         client.game_dict.pop(lobby_name, None)
 
-
 def publish_error_to_lobby(client, lobby_name, error):
     publish_to_lobby(client, lobby_name, f"Error: {error}")
 
@@ -182,6 +191,11 @@ dispatch = {
     'start' : start_game,
 }
 
+#newly created function to meet challenge 2 delierables 
+#function to get user input and call player_move
+def user_input_move(client, lobby_name, player_name):
+    user_input = input(f"Select move for {player_name} (UP/DOWN/LEFT/RIGHT): ").upper()
+    player_move(client, [None, lobby_name, player_name], user_input.encode())
 
 if __name__ == '__main__':
     load_dotenv(dotenv_path='./credentials.env')
@@ -214,4 +228,46 @@ if __name__ == '__main__':
     client.subscribe('games/+/start')
     client.subscribe('games/+/+/move')
 
-    client.loop_forever()
+        # Subscribe to error and lobby topics
+    client.subscribe("games/+/error")
+    client.subscribe("games/+/lobby")
+
+    client.loop_start()  # Start the loop asynchronously
+
+    '''this entire block is for challenge 2
+    try:
+        # Choose a lobby name or generate dynamically
+        lobby_name = "my_lobby"
+
+        logger.debug("Adding players...")
+        # Add teams and players to the lobby
+        team_players = {
+            "Team1": ["Player1"],
+            "Team2": ["Player2"]
+            # Add more teams and players as necessary
+        }
+        for team, players in team_players.items():
+            for player_name in players:
+                add_player(client, [None, lobby_name], json.dumps({"lobby_name": lobby_name, "team_name": team, "player_name": player_name}))
+            
+        # Start the game
+        start_game(client, [None, lobby_name], b"START")
+        
+
+
+        current_player_name = "Player1"
+        # Loop to handle user input and publish moves
+        while True:
+            user_input_move(client, lobby_name, current_player_name)
+
+                
+            # Toggle between Player1 and Player2
+            current_player_name = "Player2" if current_player_name == "Player1" else "Player1"
+
+            time.sleep(1)  # Sleep for 1 second before the next iteration
+
+    except KeyboardInterrupt:
+        logger.info("Exiting...")
+        client.disconnect()
+
+    '''

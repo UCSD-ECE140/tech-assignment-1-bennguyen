@@ -128,4 +128,7 @@ class Map:
 if __name__ == '__main__':
     m = Map(10, 10, [Player('Charles', None), Player('James', None)])
     print(m)
+    defaultm=getDefaultWallChoices()
+    print("default")
+    print(defaultm)
     pass
