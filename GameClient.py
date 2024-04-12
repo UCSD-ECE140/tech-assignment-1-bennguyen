@@ -18,6 +18,10 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 import random  # Add this line for random module
+from collections import deque
+
+import copy
+
 
 
 
@@ -113,6 +117,10 @@ move_to_Moveset = {
     'RIGHT' : Moveset.RIGHT
 }
 
+#handles all the logic and move resolve issue. also handles gameover when all coins collected
+#Print updated map after all players have move.
+#didn't trigger game over when all coins were collected
+#DIDN'T PRINT MAP after collecting all coins
 # Dispatched Function: handles player movement commands
 def player_move(client, topic_list, msg_payload):
     lobby_name = topic_list[1]
@@ -140,6 +148,18 @@ def player_move(client, topic_list, msg_payload):
                 if game.gameOver():
                     # Publish game over, remove game
                     publish_to_lobby(client, lobby_name, "Game Over: All coins have been collected")
+
+                    #added print statement to signal game over
+                    print("Game Over: All coins have been collected")
+                    #added final scores
+                    scores = game.getScores()
+                    print("Final Scores:")
+                    for team, score in scores.items():
+                        print(f"{team}: {score}")
+                    winning_team = max(scores, key=scores.get)
+                    print(f"The winning team is: {winning_team}")
+
+
                     client.team_dict.pop(lobby_name)
                     client.move_dict.pop(lobby_name)
                     client.game_dict.pop(lobby_name)
@@ -155,7 +175,6 @@ def player_move(client, topic_list, msg_payload):
 def start_game(client, topic_list, msg_payload):
     lobby_name = topic_list[1]
     if isinstance(msg_payload, bytes) and msg_payload.decode() == "START":
-        print("inside START if")
         if lobby_name in client.team_dict.keys():
                 # create new game
                 dict_copy = copy.deepcopy(client.team_dict[lobby_name])
@@ -193,9 +212,11 @@ dispatch = {
 
 #newly created function to meet challenge 2 delierables 
 #function to get user input and call player_move
+#don't add any space for entering user input
 def user_input_move(client, lobby_name, player_name):
     user_input = input(f"Select move for {player_name} (UP/DOWN/LEFT/RIGHT): ").upper()
     player_move(client, [None, lobby_name, player_name], user_input.encode())
+
 
 if __name__ == '__main__':
     load_dotenv(dotenv_path='./credentials.env')
@@ -224,17 +245,64 @@ if __name__ == '__main__':
     client.game_dict = {} # Keeps track of the games {{'lobby_name' : Game Object}
     client.move_dict = {} # Keeps track of the games {{'lobby_name' : Game Object}
 
+
+    lobby_name = "my_lobby"
+
     client.subscribe("new_game")
     client.subscribe('games/+/start')
     client.subscribe('games/+/+/move')
 
-        # Subscribe to error and lobby topics
+    # Subscribe to error and lobby topics
     client.subscribe("games/+/error")
     client.subscribe("games/+/lobby")
+    client.subscribe(f"games/{lobby_name}/lobby")
+
 
     client.loop_start()  # Start the loop asynchronously
 
-    '''this entire block is for challenge 2
+    try:
+        lobby_name = "my_lobby"
+
+        team_players = {
+            "TeamA": ["BEN", "WILLIAM"],
+            "TeamB": ["TOM", "JERRY"]
+        }
+
+        for team, players in team_players.items():
+            for player_name in players:
+                add_player(client, [None, lobby_name], json.dumps({"lobby_name": lobby_name, "team_name": team, "player_name": player_name}))
+            
+        start_game(client, [None, lobby_name], b"START")
+
+        round_counter=0
+        while True:
+            if not client.team_dict:  # Check if team_dict is empty
+                break  # Break out of the loop if it's empty
+
+            for key, value in client.team_dict[lobby_name].items():
+                # Check if the value is a list (which represents a team)
+                if isinstance(value, list):
+                    # Print the team name
+                    print("Team:", key)
+                    
+                    # Iterate over the player names in the team
+                    for player_name in value:
+                        move = random.choice(["UP", "DOWN", "LEFT", "RIGHT"])
+                        print("Player:", player_name, "moved", move)
+                        player_move(client, [None, lobby_name, player_name], move.encode())
+
+                # Increment the round counter at the end of each round
+            round_counter += 1
+            print(f"End of Round {round_counter}")
+
+
+    except KeyboardInterrupt:
+        logger.info("Exiting...")
+        client.disconnect()
+
+
+
+'''    #this entire block is for challenge 2
     try:
         # Choose a lobby name or generate dynamically
         lobby_name = "my_lobby"
@@ -258,10 +326,8 @@ if __name__ == '__main__':
         current_player_name = "Player1"
         # Loop to handle user input and publish moves
         while True:
-            user_input_move(client, lobby_name, current_player_name)
-
-                
-            # Toggle between Player1 and Player2
+            user_input_move(client, lobby_name, current_player_name)  
+            #Toggle between Player1 and Player2
             current_player_name = "Player2" if current_player_name == "Player1" else "Player1"
 
             time.sleep(1)  # Sleep for 1 second before the next iteration
@@ -269,5 +335,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         logger.info("Exiting...")
         client.disconnect()
-
-    '''
+'''
