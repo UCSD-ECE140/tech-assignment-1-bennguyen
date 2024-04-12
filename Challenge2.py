@@ -259,50 +259,6 @@ if __name__ == '__main__':
 
 
     client.loop_start()  # Start the loop asynchronously
-''' #this entire block is for challenge 3
-    try:
-        lobby_name = "my_lobby"
-
-        team_players = {
-            "TeamA": ["BEN", "WILLIAM"],
-            "TeamB": ["TOM", "JERRY"]
-        }
-
-        for team, players in team_players.items():
-            for player_name in players:
-                add_player(client, [None, lobby_name], json.dumps({"lobby_name": lobby_name, "team_name": team, "player_name": player_name}))
-            
-        start_game(client, [None, lobby_name], b"START")
-
-        round_counter=0
-        while True:
-            if not client.team_dict:  # Check if team_dict is empty
-                break  # Break out of the loop if it's empty
-
-            for key, value in client.team_dict[lobby_name].items():
-                # Check if the value is a list (which represents a team)
-                if isinstance(value, list):
-                    # Print the team name
-                    print("Team:", key)
-                    
-                    # Iterate over the player names in the team
-                    for player_name in value:
-                        move = random.choice(["UP", "DOWN", "LEFT", "RIGHT"])
-                        print("Player:", player_name, "moved", move)
-                        player_move(client, [None, lobby_name, player_name], move.encode())
-
-                # Increment the round counter at the end of each round
-            round_counter += 1
-            print(f"End of Round {round_counter}")
-
-
-    except KeyboardInterrupt:
-        logger.info("Exiting...")
-        client.disconnect()
-
-'''
-
-'''    #this entire block is for challenge 2
     try:
         # Choose a lobby name or generate dynamically
         lobby_name = "my_lobby"
@@ -329,10 +285,9 @@ if __name__ == '__main__':
             user_input_move(client, lobby_name, current_player_name)  
             #Toggle between Player1 and Player2
             current_player_name = "Player2" if current_player_name == "Player1" else "Player1"
-
             time.sleep(1)  # Sleep for 1 second before the next iteration
 
     except KeyboardInterrupt:
         logger.info("Exiting...")
         client.disconnect()
-'''
+

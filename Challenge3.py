@@ -259,7 +259,7 @@ if __name__ == '__main__':
 
 
     client.loop_start()  # Start the loop asynchronously
-''' #this entire block is for challenge 3
+
     try:
         lobby_name = "my_lobby"
 
@@ -300,39 +300,3 @@ if __name__ == '__main__':
         logger.info("Exiting...")
         client.disconnect()
 
-'''
-
-'''    #this entire block is for challenge 2
-    try:
-        # Choose a lobby name or generate dynamically
-        lobby_name = "my_lobby"
-
-        logger.debug("Adding players...")
-        # Add teams and players to the lobby
-        team_players = {
-            "Team1": ["Player1"],
-            "Team2": ["Player2"]
-            # Add more teams and players as necessary
-        }
-        for team, players in team_players.items():
-            for player_name in players:
-                add_player(client, [None, lobby_name], json.dumps({"lobby_name": lobby_name, "team_name": team, "player_name": player_name}))
-            
-        # Start the game
-        start_game(client, [None, lobby_name], b"START")
-        
-
-
-        current_player_name = "Player1"
-        # Loop to handle user input and publish moves
-        while True:
-            user_input_move(client, lobby_name, current_player_name)  
-            #Toggle between Player1 and Player2
-            current_player_name = "Player2" if current_player_name == "Player1" else "Player1"
-
-            time.sleep(1)  # Sleep for 1 second before the next iteration
-
-    except KeyboardInterrupt:
-        logger.info("Exiting...")
-        client.disconnect()
-'''
